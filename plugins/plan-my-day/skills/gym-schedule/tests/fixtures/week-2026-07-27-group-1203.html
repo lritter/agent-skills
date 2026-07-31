@@ -41,7 +41,7 @@
 
 	<script src="https://static.virtuagym.com/v29524107/javascript/mod_virtuagym.js" type="text/javascript"></script>
 	<script src="https://static.virtuagym.com/v29524107/javascript/vg_validation.js" type="text/javascript"></script>
-		<script id="web_apps_base_club_data" type="text/javascript">window.web_apps_base_club_data ={"user":{"id":1,"email":"","avatar":"https:\/\/static.virtuagym.com\/v29522\/thumb\/userpic\/l\/\/images\/profile_pic.png","language":"en","dateFormat":"m\/d\/Y","timeFormat":"h:i a","firstName":"Abbas","lastName":"khan","darkMode":false,"newUI":true},"member":{"id":null,"isClubManager":false},"club":{"languages":{"primary":"en","secondaries":[]},"settings":{"flexible_schedule_credits_enabled":false,"flexible_schedule_cron_credits_priority":false,"flexible_schedule_incomplete_bookings_enabled":false,"flexible_schedule_group_classes_enabled":false,"flexible_schedule_coach_app_enabled":true,"flexible_schedule_fitness_app_enabled":false,"flexible_schedule_free_trial_widget_enabled":true,"flexible_schedule_guest_booking_webhook_enabled":false},"oauth2":{"oauth2_enabled":false,"oauth2_provider":""},"meta":{"id":"42450","logo":"https:\/\/static.virtuagym.com\/v29522\/thumb\/clubheaderlogo\/m\/40ef5f590ed91d55e7dc75cb51e975380589.png","name":"Dodge YMCA","timezone":"America\/New_York","country":"US","color":"00aeef","headerBackgroundImage":"","isSuperClub":false,"isPrefClub":false,"currency":"USD","staticImageUrl":"https:\/\/static.virtuagym.com\/v29524107"}},"images":[],"properties":{"system":{"env":"prod","prod":true,"build":"","api_gateway":"https:\/\/services.virtuagym.com","timeout":10000,"fallback_lang":"en","date_format":"en-gb","cookies":{"domain":".virtuagym.com","refresh_token":"vg-user-refresh-token","access_token":"vg-user-access-token"},"static_path":"https:\/\/static.virtuagym.com\/club-base-data\/"},"integrations":{"sentry":{"enabled":true,"dsn":"","env":"production","release":""},"gtm":{"enabled":true,"id":"GTM-TNKFPN","data":{"userID":"(undefined)","portalID":"42450","memberID":"(undefined)","userType":"Personal","clubType":"7","inlineManualEnabled":"0","clubManager":0,"firstName":"Abbas","lastName":"khan","userLanguage":"en","userEmail":"","businessName":"Dodge YMCA","timestampMemberCreated":"","timestampLastSeen":"1785519470","clubCountry":"US","clubCustomMobileApp":1,"club_memberships_and_billing":1,"club_coaching_and_apps":1,"club_schedules":"9","club_pos":0,"club_webshop":0,"club_check_in":0,"club_enable_chat":0,"club_has_superclub":1,"club_is_superclub":0,"club_stripe_customer_id":"cus_KaDfJb6TsJUZLc","flexibleSchedule":1,"enable_license_page":0,"analytics_session_id":"asid_4sBMsiQI1tklgcEcIYMZCzh_"}}},"logout_url":"\/logout\/c81e728d9d4c2f636f067f89cc14862c","csrf_token":"NmZmZTM3MTBlM2U3ZWVjZTRjNDJjOGFmYzc4ODg0NTg4M2U2.XWuX2tHTQt7STbd8UXuF83EwXLbmTbRYpbAPB7VAz1o=","navigation_menu":{"links":{"home_url":"\/","my_profile":"\/user\/","apps_url":"\/user\/\/apps\/all","user_inbox_url":"\/user\/\/inbox","logout_url":"\/logout\/c81e728d9d4c2f636f067f89cc14862c","account_settings_url":"\/user\/settings","switch_club_url":"\/search\/club","business_settings_url":"\/business-settings","menu_switch_url":"","club_account_info_url":"\/user\/\/myservices"},"menu_type":"","switch_clubs":true,"s_user_unread_privmsg":"0"},"add_credits_url":"#"},"assets":[],"metaData":[]};</script>
+		
 		<script id="web_apps_global_sentry_config" type="text/javascript" src="https://static.virtuagym.com/global-sentry-config-script/0.0.8/main.js"></script>
 			<script id="vg_auth_config" type="text/javascript">window.vg_auth_config = {"clubId":42450,"currentMemberId":0,"currentUserId":1,"environment":"production","logoutUrl":"\/logout\/c81e728d9d4c2f636f067f89cc14862c","baseUrl":"https:\/\/dodge-ymca.virtuagym.com"};</script>
 	
@@ -118,115 +118,7 @@
 	
 		
 						 			
-	<script>
-		$(document).ready(function(){
-
-			var dataLayer = window.dataLayer = window.dataLayer || [];
-
-			var user_first_name = 'Abbas';
-			var user_last_name = 'khan';
-			var user_id = '1';
-			var user_email = '';
-			var user_language =  'en';
-			var club_id = '42450';
-			var club_salesforce_id = '001b000003eCJGS';
-			var member_id = '';
-			var is_employee = '';
-			var user_type = '';
-			var club_type = '7';
-			var inline_manual_enabled = '0';
-			var is_club_manager = 0;
-			var is_free_trial =  $('meta[name="free-trial"]').attr('content');
-			var chat_enabled = '';
-			var club_chat_enabled = parseInt('0');
-			var club_name = 'Dodge YMCA';
-			var timestamp_member_created = '';
-			var timestamp_last_seen = '1785519470';
-			var club_country = 'US';
-			var club_custom_mobile_app =('1') ? 1 : 0;
-			var club_memberships_and_billing = ('1') ? 1 : 0 ;
-			var club_coaching_and_apps = ('1') ? 1 : 0;
-			var club_schedules= '9';
-			var club_pos = ('0') ? 1 : 0;
-			var club_webshop = ('0') ? 1 : 0;
-			var club_check_in = ('0') ? 1 : 0;
-			var club_stripe_customer_id = 'cus_KaDfJb6TsJUZLc';
-			var club_has_superclub = ('1') ? 1 : 0;
-			var club_is_superclub = ('') ? 1 : 0;
-			var enable_sidebar = ('1');
-			var enable_license_page = parseInt('0', 10) || 0;
-			var analytics_session_id = "asid_4sBMsiQI1tklgcEcIYMZCzh_";
-
-			if(''){
-				is_club_manager = 1;
-			}
-
-			var split_email = user_email.split('@');
-			if(split_email[1] == 'digifit.eu' || split_email[1] == 'virtuagym.com'){
-				club_name = 'Virtuagym';
-			}
-
-			if(user_id == '1') user_id = '(undefined)';
-			if(member_id == '') member_id = '(undefined)';
-			if(club_id == '1') club_id = 'Virtuagym';
-			if(is_employee) {
-				user_type = 'Employee';
-			} else{
-				user_type = 'Personal';
-			}
-
-			var dataToPush = {
-				'userID' : user_id,
-				'portalID' : club_id,
-				'memberID' : member_id,
-				'userType' : user_type,
-				'clubType' : club_type,
-				'inlineManualEnabled' : inline_manual_enabled,
-				'clubManager' : is_club_manager,
-				'isFreeTrial' : is_free_trial,
-				'firstName' : user_first_name,
-				'lastName' : user_last_name,
-				'salesForceID' : club_salesforce_id,
-				'userLanguage' : user_language,
-				'userEmail' : user_email,
-				'businessName' : club_name,
-				'timestampMemberCreated' : timestamp_member_created,
-				'timestampLastSeen' : timestamp_last_seen,
-				'clubCountry' : club_country,
-				'clubCustomMobileApp' : club_custom_mobile_app,
-				'club_memberships_and_billing' : club_memberships_and_billing,
-				'club_coaching_and_apps' : club_coaching_and_apps,
-				'club_schedules' : club_schedules,
-				'club_pos' : club_pos,
-				'club_webshop' : club_webshop,
-				'club_check_in' : club_check_in,
-				'club_stripe_customer_id' : club_stripe_customer_id,
-				'club_has_superclub' : club_has_superclub,
-				'club_is_superclub' : club_is_superclub,
-				'enable_sidebar' : enable_sidebar,
-				'club_enable_chat': club_chat_enabled,
-				'enable_license_page' : enable_license_page,
-				'analytics_session_id': analytics_session_id
-			};
-
-			if(is_free_trial === '1'){
-				dataToPush['trialStartDate'] = '';
-				dataToPush['trialEndDate'] = '';
-				dataToPush['chatEnabled'] = chat_enabled;
-			}
-
-			dataLayer.push(dataToPush);
-
-			// Remove `asid` from the URL after it has been consumed server-side.
-			if (window.history && window.history.replaceState) {
-				var url = new URL(window.location.href);
-				if (url.searchParams.has('asid')) {
-					url.searchParams.delete('asid');
-					window.history.replaceState(null, '', url.toString());
-				}
-			}
-		});
-	</script>
+	
 
 	    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-TNKFPN"
                       height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>

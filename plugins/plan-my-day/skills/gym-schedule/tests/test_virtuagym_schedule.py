@@ -31,7 +31,7 @@ class TestParseTimeRange(unittest.TestCase):
 
 
 FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
-BASE = "https://dodge-ymca.virtuagym.com"
+BASE = "https://example-gym.virtuagym.com"
 
 POOL_PER_DAY = {
     "2026-07-27": 14, "2026-07-28": 15, "2026-07-29": 14, "2026-07-30": 14,
