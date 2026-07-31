@@ -15,7 +15,7 @@
     },
     {
       "name": "plan-my-day",
-      "description": "Morning planning routine. Reads calendar, PRs, tickets, email, and Apple Reminders, checks standing priorities against the week so far, and produces one clear agenda for today.",
+      "description": "Morning planning routine. Reads calendar, PRs, tickets, email, and Apple Reminders, checks standing priorities against the week so far, and produces one clear agenda for today. Includes gym-schedule for looking up class times at a Virtuagym-hosted gym.",
       "source": "./plugins/plan-my-day",
       "category": "productivity"
     },

@@ -9,7 +9,6 @@ import datetime
 import json
 import re
 import sys
-import urllib.error
 import urllib.request
 from html.parser import HTMLParser
 from typing import Dict, FrozenSet, Iterable, List, NamedTuple, Optional, Sequence, Tuple
@@ -36,6 +35,8 @@ def parse_time_range(text: str) -> Tuple[str, str]:
     end = _to_24h(match.group(4), match.group(5), match.group(6))
     return start, end
 
+
+_CLOCK_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
 _DAY_CLASS_PREFIX = "internal-event-day-"
 _MODAL_RE = re.compile(r"openScheduleModal\('([^']+)'\)")
@@ -222,6 +223,7 @@ _URL_TEMPLATE = (
     "&in_app=0&single_club=0&pref_club={club}"
 )
 _USER_AGENT = "gym-schedule (Claude Code skill; stdlib urllib)"
+_MAX_DAYS = 62
 
 
 class ScheduleError(Exception):
@@ -241,7 +243,14 @@ def week_url(host: str, club: str, event_type: str, anchor_date: str) -> str:
 def date_range(start: str, days: int) -> List[str]:
     if days < 1:
         raise ValueError("--days must be at least 1, got %r" % (days,))
-    first = datetime.date(*[int(part) for part in start.split("-")])
+    if days > _MAX_DAYS:
+        # Each uncovered week is another request to the gym. Claude builds
+        # this invocation, so cap the blast radius rather than trusting it.
+        raise ValueError("--days must be at most %d, got %r" % (_MAX_DAYS, days))
+    try:
+        first = datetime.datetime.strptime(start, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        raise ValueError("--date expects an ISO date (YYYY-MM-DD), got %r" % (start,))
     return [(first + datetime.timedelta(days=n)).isoformat() for n in range(days)]
 
 
@@ -258,15 +267,18 @@ def collect(host, club, categories, dates, fetch):
     """Fetch every week page needed to cover `dates`, for every category.
 
     Deduplicates by the dates a page actually covered, so no week-start
-    convention is assumed. Returns (all sessions, pre-filter count per label).
+    convention is assumed. Returns (all sessions, pre-filter count per label,
+    uncovered dates per label).
     """
     wanted = sorted(set(dates))
     sessions = []  # type: List[Session]
     counts = {}  # type: Dict[str, int]
+    uncovered = {}  # type: Dict[str, List[str]]
     base_url = "https://" + host
 
     for label, event_type in categories:
         counts[label] = 0
+        uncovered[label] = []
         covered = set()  # type: set
         outstanding = list(wanted)
 
@@ -280,11 +292,21 @@ def collect(host, club, categories, dates, fetch):
             except Exception as error:
                 raise ScheduleError("fetch failed for %s: %s" % (url, error))
 
-            parsed = parse_week(html, label, base_url)
+            try:
+                parsed = parse_week(html, label, base_url)
+            except ValueError as error:
+                # An unparseable time or day token means the markup drifted.
+                # That must degrade to one clean line, not a traceback -- it is
+                # the most likely drift and the whole reason ScheduleError exists.
+                raise ScheduleError(
+                    "could not parse the %s page for %s: %s" % (label, anchor, error))
+
             if not parsed.dates:
-                # No day cells at all: this category is dead (usually a wrong
-                # event_type id). Record zero and stop asking -- main() decides
-                # whether one dead category is a warning or a hard failure.
+                # No day cells at all. On the first pass this means the category
+                # is dead (usually a wrong event_type id). Later it means a week
+                # we cannot cover. Either way stop asking; record what is left so
+                # main() can say so rather than silently returning partial data.
+                uncovered[label] = list(outstanding)
                 break
             if anchor not in parsed.dates:
                 # Day cells exist but not the one requested: the markup or URL
@@ -300,7 +322,7 @@ def collect(host, club, categories, dates, fetch):
             covered |= set(parsed.dates)
             outstanding = [d for d in outstanding if d not in covered]
 
-    return sessions, counts
+    return sessions, counts, uncovered
 
 
 def format_text(sessions, counts):
@@ -397,6 +419,27 @@ def main(argv=None, fetch=http_fetch, stdout=None, stderr=None):
     except ValueError as error:
         parser.error(str(error))  # exits 2
 
+    seen = set()
+    for label, _event_type in categories:
+        if label in seen:
+            parser.error("duplicate --category label %r" % (label,))
+        seen.add(label)
+
+    # Reject malformed clock times rather than string-comparing them. "9:00"
+    # sorts after "10:00", so an unvalidated window silently returns the wrong
+    # rows -- exactly the plausible-looking wrong answer this tool exists to
+    # avoid. Callers construct these programmatically, so loud is right.
+    for flag, value in (("--after", args.after), ("--before", args.before)):
+        if value is not None and not _CLOCK_RE.match(value):
+            parser.error(
+                "%s expects a 24-hour HH:MM time (e.g. 17:00), got %r" % (flag, value))
+
+    if args.match is not None:
+        try:
+            re.compile(args.match)
+        except re.error as error:
+            parser.error("--match is not a valid regex: %s" % (error,))
+
     start = args.date or datetime.date.today().isoformat()
     try:
         dates = date_range(start, args.days)
@@ -406,7 +449,8 @@ def main(argv=None, fetch=http_fetch, stdout=None, stderr=None):
     host = resolve_host(args.site)
 
     try:
-        sessions, counts = collect(host, args.club, categories, dates, fetch)
+        sessions, counts, uncovered = collect(
+            host, args.club, categories, dates, fetch)
     except ScheduleError as error:
         stderr.write("gym-schedule: %s\n" % (error,))
         return 1
@@ -425,6 +469,35 @@ def main(argv=None, fetch=http_fetch, stdout=None, stderr=None):
                 "gym-schedule: warning: category %r returned no rows at all; "
                 "check its event_type id.\n" % (label,)
             )
+        elif uncovered.get(label):
+            # Partial coverage: some rows came back, but a later week did not.
+            # Returning 7 days when 14 were asked for, silently, is worse than
+            # saying so.
+            stderr.write(
+                "gym-schedule: warning: category %r returned no schedule for %s; "
+                "those dates are missing from the results.\n"
+                % (label, ", ".join(uncovered[label]))
+            )
+
+    # A wrong event_type is not an error to this server: it falls back to a
+    # default schedule and returns 200. Measured on one real club, event_type
+    # 9999 and "abc" both returned byte-identical rows to a valid id. Nothing in
+    # a single response can reveal that -- but two categories that come back
+    # identical are a reliable tell, and cost nothing to check.
+    signatures = {}  # type: Dict[str, frozenset]
+    for label, _event_type in categories:
+        signatures[label] = frozenset(
+            (s.date, s.start, s.name) for s in sessions if s.category == label)
+    labels = [label for label, _ in categories]
+    for i, left in enumerate(labels):
+        for right in labels[i + 1:]:
+            if signatures[left] and signatures[left] == signatures[right]:
+                stderr.write(
+                    "gym-schedule: warning: categories %r and %r returned "
+                    "identical schedules; at least one event_type id is probably "
+                    "wrong (this server serves a default schedule for unknown "
+                    "ids rather than failing).\n" % (left, right)
+                )
 
     kept = filter_sessions(sessions, dates, args.after, args.before, args.match)
     displayed = dict((label, 0) for label, _ in categories)

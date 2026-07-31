@@ -262,7 +262,7 @@ class TestFetchPlumbing(unittest.TestCase):
 class TestCollect(unittest.TestCase):
     def test_one_fetch_per_category_for_dates_inside_one_week(self):
         fetch = _StubFetcher()
-        sessions, counts = collect(
+        sessions, counts, _ = collect(
             "example-gym.virtuagym.com", "00000",
             [("pool", "1204"), ("group", "1203")],
             ["2026-07-27", "2026-07-31", "2026-08-02"],
@@ -274,7 +274,7 @@ class TestCollect(unittest.TestCase):
 
     def test_sessions_are_returned_unfiltered_for_the_whole_week(self):
         fetch = _StubFetcher()
-        sessions, _ = collect(
+        sessions, _, _ = collect(
             "example-gym.virtuagym.com", "00000", [("pool", "1204")],
             ["2026-07-31"], fetch,
         )
@@ -283,7 +283,7 @@ class TestCollect(unittest.TestCase):
     def test_a_span_crossing_a_week_boundary_fetches_each_week_once(self):
         # Sat/Sun fall in the fixture week; Mon 3 Aug is the next one.
         fetch = _StubFetcher({"2026-08-03": AUGUST_WEEK_TWO})
-        sessions, counts = collect(
+        sessions, counts, _ = collect(
             "example-gym.virtuagym.com", "00000", [("pool", "1204")],
             ["2026-08-01", "2026-08-02", "2026-08-03"], fetch,
         )
@@ -295,7 +295,7 @@ class TestCollect(unittest.TestCase):
 
     def test_a_category_returning_nothing_reports_zero_rather_than_failing(self):
         fetch = _StubFetcher()
-        _, counts = collect(
+        _, counts, _ = collect(
             "example-gym.virtuagym.com", "00000",
             [("pool", "1204"), ("bogus", "9999")],
             ["2026-07-27"], fetch,
@@ -304,7 +304,7 @@ class TestCollect(unittest.TestCase):
         self.assertEqual(counts["pool"], 87)
 
     def test_a_page_with_no_day_cells_at_all_is_a_dead_category_not_an_error(self):
-        _, counts = collect(
+        _, counts, _ = collect(
             "h", "00000", [("dead", "9999")], ["2026-07-27"],
             lambda url: "<html><body></body></html>")
         self.assertEqual(counts, {"dead": 0})
@@ -513,6 +513,129 @@ class TestMain(unittest.TestCase):
                  "--category", "nope", "--date", "2026-07-27"],
                 _StubFetcher())
         self.assertEqual(caught.exception.code, 2)
+
+
+class TestInputValidation(unittest.TestCase):
+    """Every case here previously returned a confident wrong answer at exit 0."""
+
+    def _usage_error(self, extra):
+        base = ["--site", "example-gym", "--club", "00000",
+                "--category", "pool=1204", "--date", "2026-07-27"]
+        with self.assertRaises(SystemExit) as caught:
+            run_main(base + extra, _StubFetcher())
+        self.assertEqual(caught.exception.code, 2)
+
+    def test_after_without_leading_zero_is_rejected(self):
+        # "9:00" string-compares after "10:00", so this silently dropped every
+        # morning class and reported an empty schedule.
+        self._usage_error(["--after", "9:00"])
+
+    def test_after_in_twelve_hour_form_is_rejected(self):
+        self._usage_error(["--after", "5pm"])
+
+    def test_before_is_validated_too(self):
+        self._usage_error(["--before", "25:00"])
+
+    def test_well_formed_window_still_works(self):
+        code, out, _ = run_main(
+            ["--site", "example-gym", "--club", "00000", "--category", "pool=1204",
+             "--date", "2026-07-27", "--after", "09:00"], _StubFetcher())
+        self.assertEqual(code, 0)
+        self.assertIn("pool 9", out)
+
+    def test_invalid_match_regex_is_rejected(self):
+        self._usage_error(["--match", "lap swim ("])
+
+    def test_duplicate_category_label_is_rejected(self):
+        with self.assertRaises(SystemExit) as caught:
+            run_main(["--site", "example-gym", "--club", "00000",
+                      "--category", "pool=1204", "--category", "pool=1203",
+                      "--date", "2026-07-27"], _StubFetcher())
+        self.assertEqual(caught.exception.code, 2)
+
+    def test_non_iso_date_is_a_usage_error_not_a_traceback(self):
+        with self.assertRaises(SystemExit) as caught:
+            run_main(["--site", "example-gym", "--club", "00000",
+                      "--category", "pool=1204", "--date", "20260731"],
+                     _StubFetcher())
+        self.assertEqual(caught.exception.code, 2)
+
+    def test_absurd_days_span_is_capped(self):
+        self._usage_error(["--days", "400"])
+
+
+class TestMarkupDriftDegradesCleanly(unittest.TestCase):
+    def test_unparseable_time_becomes_a_schedule_error(self):
+        # The likeliest drift. It must not escape as a bare ValueError.
+        drifted = synthetic_week(["27-07-2026"], time_text="All day")
+        with self.assertRaises(ScheduleError) as caught:
+            collect("h", "00000", [("pool", "1204")], ["2026-07-27"],
+                    lambda url: drifted)
+        self.assertIn("could not parse", str(caught.exception))
+
+    def test_cli_reports_drift_as_one_line_and_exits_one(self):
+        drifted = synthetic_week(["27-07-2026"], time_text="All day")
+        code, out, err = run_main(
+            ["--site", "example-gym", "--club", "00000", "--category", "pool=1204",
+             "--date", "2026-07-27"], lambda url: drifted)
+        self.assertEqual(code, 1)
+        self.assertEqual(out, "")
+        self.assertIn("gym-schedule:", err)
+        self.assertNotIn("Traceback", err)
+
+
+class TestPartialCoverageIsAnnounced(unittest.TestCase):
+    def test_a_later_week_with_no_schedule_warns_rather_than_truncating(self):
+        # Ask for 14 days; the second week comes back empty. Previously this
+        # returned 7 days, exit 0, empty stderr.
+        def fetch(url):
+            if "/classes/week/2026-07-27" in url:
+                return load("week-2026-07-27-pool-1204.html")
+            return "<html><body></body></html>"
+
+        code, out, err = run_main(
+            ["--site", "example-gym", "--club", "00000", "--category", "pool=1204",
+             "--date", "2026-07-27", "--days", "14"], fetch)
+        self.assertEqual(code, 0)
+        self.assertIn("pool 87", out)
+        self.assertIn("2026-08-03", err)
+        self.assertIn("missing", err)
+
+    def test_uncovered_is_empty_when_everything_resolves(self):
+        _, _, uncovered = collect(
+            "example-gym.virtuagym.com", "00000", [("pool", "1204")],
+            ["2026-07-27"], _StubFetcher())
+        self.assertEqual(uncovered, {"pool": []})
+
+
+class TestIdenticalCategoriesAreFlagged(unittest.TestCase):
+    """A wrong event_type does not fail on this server -- it serves a default
+    schedule. Measured: event_type 9999 and "abc" both returned identical rows
+    to a valid id. Two categories agreeing exactly is the one detectable tell."""
+
+    def test_two_categories_returning_the_same_schedule_warn(self):
+        same = lambda url: load("week-2026-07-27-pool-1204.html")
+        code, _, err = run_main(
+            ["--site", "example-gym", "--club", "00000",
+             "--category", "pool=1204", "--category", "group=1203",
+             "--date", "2026-07-27"], same)
+        self.assertEqual(code, 0)
+        self.assertIn("identical schedules", err)
+
+    def test_genuinely_different_categories_do_not_warn(self):
+        code, _, err = run_main(
+            ["--site", "example-gym", "--club", "00000",
+             "--category", "pool=1204", "--category", "group=1203",
+             "--date", "2026-07-27"], _StubFetcher())
+        self.assertEqual(code, 0)
+        self.assertNotIn("identical schedules", err)
+
+    def test_a_single_category_never_warns(self):
+        code, _, err = run_main(
+            ["--site", "example-gym", "--club", "00000",
+             "--category", "pool=1204", "--date", "2026-07-27"], _StubFetcher())
+        self.assertEqual(code, 0)
+        self.assertNotIn("identical schedules", err)
 
 
 if __name__ == "__main__":

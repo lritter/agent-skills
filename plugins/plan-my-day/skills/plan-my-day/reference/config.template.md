@@ -78,7 +78,8 @@ visible in any schedule URL. `categories` maps a label you choose to the
   categories: <label>=<event_type>, <label>=<event_type>
   feeds: <standing priority name>
 
-<!-- optional; leave empty and only the hand-written anchors below are used -->
+<!-- optional; delete the placeholder row above if you have no gym to pull from.
+     A row still holding <angle-bracket> placeholders counts as empty. -->
 
 ## Anchored options
 

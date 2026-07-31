@@ -80,7 +80,7 @@ Then fan out. These are independent — issue them in a single block so they run
 | Tickets | `notion-query-data-sources` against the source in config — see below |
 | Email | `search_threads`, query below, `pageSize` 15 |
 | Reminders | `reminders show "<list>" --format json` per list in config |
-| Gym classes | `gym-schedule`'s `scripts/virtuagym_schedule.py`, `--date` today, once per **Schedule sources** entry in config. Skip entirely if that section is empty. |
+| Gym classes | Invoke the **`gym-schedule` skill** for today, once per **Schedule sources** entry in config. Skip entirely if that section is empty or still holds the template's placeholders. |
 
 Both `gh search` forms are repo-independent — they work from any directory, no repo context needed.
 
@@ -127,8 +127,14 @@ If a source fails — expired MCP auth, calendar not connected, `gh` not logged 
 
 ```
 Notion: NOT CHECKED — MCP auth expired, re-auth with /mcp
-Gym schedule: NOT CHECKED — virtuagym_schedule.py exited 1
+Gym schedule: NOT CHECKED — the schedule fetch failed
+Gym schedule: PARTIAL — the "group" category returned nothing; check its event_type
 ```
+
+That second gym line matters: a schedule source can **succeed** and still be
+missing half its categories, or missing later dates. That case exits 0 and warns
+on stderr rather than failing. Read stderr, not just the exit code — a source
+that quietly returned half a schedule is the one failure that looks like success.
 
 Never silently omit a source. An agenda quietly missing a 10am is worse than no agenda at all. MCP auth expires periodically; expect it.
 

@@ -56,8 +56,25 @@ that category contributed nothing *after filtering* — often legitimate, as in
 `--after 17:00` on a day with no evening lap swim.
 
 A category that returned nothing **at all** is different: the script writes a
-warning to stderr naming it. That usually means a wrong `event_type` id, not a
-quiet day. Repeat it rather than planning around a schedule you only half have.
+warning to stderr naming it. Repeat it rather than planning around a schedule
+you only half have.
+
+## Getting `event_type` wrong is silent — this is the sharp edge
+
+A wrong `event_type` id is **not** an error to Virtuagym. It returns HTTP 200
+with a default schedule. Measured against one real club: `event_type=9999` and
+`event_type=abc` both returned rows identical to a valid id, and `event_type=0`
+returned every category at once. So a typo gets you a plausible, wrong,
+confidently-labelled schedule rather than a failure.
+
+Two consequences:
+
+- **Never guess an `event_type`.** Read it out of the gym's own schedule URL for
+  the tab you want. Guessing produces output that looks right.
+- If the script warns that two categories returned **identical schedules**, at
+  least one id is wrong. Say so and stop; do not plan against it.
+
+Always read stderr, not just the exit code.
 
 If the script exits non-zero, report it and move on. Do not fall back to
 fetching the page yourself: a non-zero exit means no category parsed any rows,
