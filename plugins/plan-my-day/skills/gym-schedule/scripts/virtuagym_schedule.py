@@ -4,15 +4,38 @@
 Standard library only. See SKILL.md for why the odd bits are the way they are.
 """
 
+import argparse
 import datetime
+import json
 import re
+import sys
+import urllib.error
+import urllib.request
 from html.parser import HTMLParser
-from typing import Dict, FrozenSet, List, NamedTuple, Optional, Tuple
+from typing import Dict, FrozenSet, Iterable, List, NamedTuple, Optional, Sequence, Tuple
 
 _TIME_RE = re.compile(
     r"^\s*(\d{1,2}):(\d{2})\s*([ap])\.?m\.?\s*-\s*(\d{1,2}):(\d{2})\s*([ap])\.?m\.?\s*$",
     re.IGNORECASE,
 )
+
+
+def _to_24h(hour: str, minute: str, meridiem: str) -> str:
+    h = int(hour) % 12          # 12 am -> 0, 12 pm -> 0 before the += 12 below
+    if meridiem.lower() == "p":
+        h += 12
+    return "%02d:%s" % (h, minute)
+
+
+def parse_time_range(text: str) -> Tuple[str, str]:
+    """'06:30 am - 07:25 am' -> ('06:30', '07:25'). Raises ValueError if malformed."""
+    match = _TIME_RE.match(text)
+    if not match:
+        raise ValueError("unparseable time range: %r" % (text,))
+    start = _to_24h(match.group(1), match.group(2), match.group(3))
+    end = _to_24h(match.group(4), match.group(5), match.group(6))
+    return start, end
+
 
 _DAY_CLASS_PREFIX = "internal-event-day-"
 _MODAL_RE = re.compile(r"openScheduleModal\('([^']+)'\)")
@@ -119,23 +142,6 @@ def _weekday_name(iso: str) -> str:
     return _WEEKDAYS[parsed.weekday()]
 
 
-def _to_24h(hour: str, minute: str, meridiem: str) -> str:
-    h = int(hour) % 12          # 12 am -> 0, 12 pm -> 0 before the += 12 below
-    if meridiem.lower() == "p":
-        h += 12
-    return "%02d:%s" % (h, minute)
-
-
-def parse_time_range(text: str) -> Tuple[str, str]:
-    """'06:30 am - 07:25 am' -> ('06:30', '07:25'). Raises ValueError if malformed."""
-    match = _TIME_RE.match(text)
-    if not match:
-        raise ValueError("unparseable time range: %r" % (text,))
-    start = _to_24h(match.group(1), match.group(2), match.group(3))
-    end = _to_24h(match.group(4), match.group(5), match.group(6))
-    return start, end
-
-
 def parse_week(html: str, category: str, base_url: str) -> ParsedWeek:
     """Parse one Virtuagym week page into sessions plus the dates it covered."""
     parser = _GridParser()
@@ -174,3 +180,263 @@ def parse_week(html: str, category: str, base_url: str) -> ParsedWeek:
         ))
 
     return ParsedWeek(sessions=sessions, dates=frozenset(dates))
+
+
+def filter_sessions(
+    sessions,             # type: Sequence[Session]
+    dates,                # type: Iterable[str]
+    after=None,           # type: Optional[str]
+    before=None,          # type: Optional[str]
+    match=None,           # type: Optional[str]
+):
+    # type: (...) -> List[Session]
+    """Filter by ISO date, start-time window, and a case-insensitive name regex.
+
+    `after` is inclusive, `before` exclusive, and both compare against the start
+    time -- a class that runs past `before` is still kept, because the question
+    is when you can show up.
+    """
+    wanted = set(dates)
+    pattern = re.compile(match, re.IGNORECASE) if match else None
+
+    kept = []
+    for session in sessions:
+        if session.date not in wanted:
+            continue
+        if after is not None and session.start < after:
+            continue
+        if before is not None and session.start >= before:
+            continue
+        if pattern is not None and not pattern.search(session.name):
+            continue
+        kept.append(session)
+
+    kept.sort(key=lambda s: (s.date, s.start, s.category, s.name))
+    return kept
+
+
+_URL_TEMPLATE = (
+    "https://{host}/classes/week/{anchor}"
+    "?event_type={event_type}&coach=0&activity_id=0&member_id_filter=0"
+    "&embedded=1&planner_type=1&show_personnel_schedule="
+    "&in_app=0&single_club=0&pref_club={club}"
+)
+_USER_AGENT = "gym-schedule (Claude Code skill; stdlib urllib)"
+
+
+class ScheduleError(Exception):
+    """Anything that means the caller must not treat the result as a schedule."""
+
+
+def resolve_host(site: str) -> str:
+    """'dodge-ymca' -> 'dodge-ymca.virtuagym.com'. A full hostname passes through."""
+    return site if "." in site else site + ".virtuagym.com"
+
+
+def week_url(host: str, club: str, event_type: str, anchor_date: str) -> str:
+    return _URL_TEMPLATE.format(
+        host=host, anchor=anchor_date, event_type=event_type, club=club)
+
+
+def date_range(start: str, days: int) -> List[str]:
+    if days < 1:
+        raise ValueError("--days must be at least 1, got %r" % (days,))
+    first = datetime.date(*[int(part) for part in start.split("-")])
+    return [(first + datetime.timedelta(days=n)).isoformat() for n in range(days)]
+
+
+def http_fetch(url: str) -> str:
+    """The real network call. Injected, so tests never reach it."""
+    request = urllib.request.Request(url, headers={"User-Agent": _USER_AGENT})
+    with urllib.request.urlopen(request, timeout=30) as response:
+        charset = response.headers.get_content_charset() or "utf-8"
+        return response.read().decode(charset, errors="replace")
+
+
+def collect(host, club, categories, dates, fetch):
+    # type: (str, str, Sequence, Iterable[str], object) -> tuple
+    """Fetch every week page needed to cover `dates`, for every category.
+
+    Deduplicates by the dates a page actually covered, so no week-start
+    convention is assumed. Returns (all sessions, pre-filter count per label).
+    """
+    wanted = sorted(set(dates))
+    sessions = []  # type: List[Session]
+    counts = {}  # type: Dict[str, int]
+    base_url = "https://" + host
+
+    for label, event_type in categories:
+        counts[label] = 0
+        covered = set()  # type: set
+        outstanding = list(wanted)
+
+        while outstanding:
+            anchor = outstanding[0]
+            url = week_url(host, club, event_type, anchor)
+            try:
+                html = fetch(url)
+            except ScheduleError:
+                raise
+            except Exception as error:
+                raise ScheduleError("fetch failed for %s: %s" % (url, error))
+
+            parsed = parse_week(html, label, base_url)
+            if not parsed.dates:
+                # No day cells at all: this category is dead (usually a wrong
+                # event_type id). Record zero and stop asking -- main() decides
+                # whether one dead category is a warning or a hard failure.
+                break
+            if anchor not in parsed.dates:
+                # Day cells exist but not the one requested: the markup or URL
+                # scheme changed. Without this guard the loop never terminates.
+                raise ScheduleError(
+                    "page for %s did not cover that date (covered: %s) -- the "
+                    "markup or URL scheme has probably changed"
+                    % (anchor, ", ".join(sorted(parsed.dates)))
+                )
+
+            sessions.extend(parsed.sessions)
+            counts[label] += len(parsed.sessions)
+            covered |= set(parsed.dates)
+            outstanding = [d for d in outstanding if d not in covered]
+
+    return sessions, counts
+
+
+def format_text(sessions, counts):
+    # type: (Sequence[Session], Dict[str, int]) -> str
+    """Human- and Claude-readable listing, grouped by day, with a count footer."""
+    lines = []
+    if not sessions:
+        lines.append("No sessions matched.")
+    else:
+        width = max(len(label) for label in counts) if counts else 0
+        current_date = None
+        for session in sessions:
+            if session.date != current_date:
+                if current_date is not None:
+                    lines.append("")
+                lines.append("%s %s" % (session.date, session.weekday))
+                current_date = session.date
+            row = "  %s–%s  %s  %s" % (
+                session.start, session.end, session.category.ljust(width), session.name)
+            if session.instructor:
+                row += " — " + session.instructor
+            lines.append(row)
+
+    footer = " · ".join(
+        "%s %d" % (label, counts[label]) for label in sorted(counts))
+    lines.append("")
+    lines.append("— " + footer)
+    return "\n".join(lines)
+
+
+def format_json(host, club, dates, sessions, counts):
+    # type: (str, str, Sequence[str], Sequence[Session], Dict[str, int]) -> str
+    payload = {
+        "site": host,
+        "club": club,
+        "dates": list(dates),
+        "counts": counts,
+        "sessions": [session._asdict() for session in sessions],
+    }
+    return json.dumps(payload, indent=2, sort_keys=False)
+
+
+def parse_category(value: str) -> Tuple[str, str]:
+    """'pool=1204' -> ('pool', '1204')."""
+    if "=" not in value:
+        raise ValueError("expected LABEL=EVENT_TYPE, got %r" % (value,))
+    label, event_type = value.split("=", 1)
+    label, event_type = label.strip(), event_type.strip()
+    if not label or not event_type:
+        raise ValueError("expected LABEL=EVENT_TYPE, got %r" % (value,))
+    return label, event_type
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="virtuagym_schedule.py",
+        description="Read class schedules from a Virtuagym-hosted gym.",
+        epilog=(
+            "The page fetched is always a whole week, so widening --days within "
+            "one week costs no extra requests. Times are local to the gym and "
+            "are never converted."
+        ),
+    )
+    parser.add_argument("--site", required=True,
+                        help="Virtuagym subdomain (e.g. dodge-ymca) or full hostname")
+    parser.add_argument("--club", required=True, help="pref_club id (e.g. 42450)")
+    parser.add_argument("--category", action="append", required=True,
+                        metavar="LABEL=EVENT_TYPE",
+                        help="repeatable, e.g. --category pool=1204 --category group=1203")
+    parser.add_argument("--date", default=None,
+                        help="ISO start date; defaults to today")
+    parser.add_argument("--days", type=int, default=1,
+                        help="number of days from --date, inclusive (default 1)")
+    parser.add_argument("--after", default=None,
+                        help="keep classes starting at or after HH:MM")
+    parser.add_argument("--before", default=None,
+                        help="keep classes starting strictly before HH:MM")
+    parser.add_argument("--match", default=None,
+                        help="case-insensitive regex against the class name")
+    parser.add_argument("--format", choices=("text", "json"), default="text")
+    return parser
+
+
+def main(argv=None, fetch=http_fetch, stdout=None, stderr=None):
+    # type: (Optional[Sequence[str]], object, object, object) -> int
+    stdout = sys.stdout if stdout is None else stdout
+    stderr = sys.stderr if stderr is None else stderr
+
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+
+    try:
+        categories = [parse_category(value) for value in args.category]
+    except ValueError as error:
+        parser.error(str(error))  # exits 2
+
+    start = args.date or datetime.date.today().isoformat()
+    try:
+        dates = date_range(start, args.days)
+    except ValueError as error:
+        parser.error(str(error))  # exits 2
+
+    host = resolve_host(args.site)
+
+    try:
+        sessions, counts = collect(host, args.club, categories, dates, fetch)
+    except ScheduleError as error:
+        stderr.write("gym-schedule: %s\n" % (error,))
+        return 1
+
+    if not any(counts.values()):
+        stderr.write(
+            "gym-schedule: no rows parsed for any category (%s) -- treating as a "
+            "failure, not an empty schedule. The markup or ids may have changed.\n"
+            % ", ".join("%s=%s" % pair for pair in categories)
+        )
+        return 1
+
+    for label, _event_type in categories:
+        if counts[label] == 0:
+            stderr.write(
+                "gym-schedule: warning: category %r returned no rows at all; "
+                "check its event_type id.\n" % (label,)
+            )
+
+    kept = filter_sessions(sessions, dates, args.after, args.before, args.match)
+    displayed = dict((label, 0) for label, _ in categories)
+    for session in kept:
+        displayed[session.category] += 1
+
+    if args.format == "json":
+        stdout.write(format_json(host, args.club, dates, kept, displayed) + "\n")
+    else:
+        stdout.write(format_text(kept, displayed) + "\n")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
