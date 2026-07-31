@@ -1,0 +1,12 @@
+{
+  "name": "handoff",
+  "description": "Write a handoff document capturing session state, then apply it — return the contents, dispatch a subagent, or start a fresh session.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Lincoln Ritter",
+    "url": "https://github.com/lritter"
+  },
+  "homepage": "https://github.com/lritter/agent-skills/tree/main/plugins/handoff",
+  "repository": "https://github.com/lritter/agent-skills",
+  "keywords": ["handoff", "context", "session", "subagent"]
+}

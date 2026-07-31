@@ -1,0 +1,29 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "lritter-agent-skills",
+  "description": "Lincoln Ritter's personal agent skills: session handoff, daily planning, and self-reflection.",
+  "owner": {
+    "name": "Lincoln Ritter",
+    "url": "https://github.com/lritter"
+  },
+  "plugins": [
+    {
+      "name": "handoff",
+      "description": "Write a handoff document capturing session state, then apply it — return the contents, dispatch a subagent, or start a fresh session. Two skills that pair: create-handoff writes, perform-handoff executes.",
+      "source": "./plugins/handoff",
+      "category": "productivity"
+    },
+    {
+      "name": "plan-my-day",
+      "description": "Morning planning routine. Reads calendar, PRs, tickets, email, and Apple Reminders, checks standing priorities against the week so far, and produces one clear agenda for today.",
+      "source": "./plugins/plan-my-day",
+      "category": "productivity"
+    },
+    {
+      "name": "reflect",
+      "description": "Analyze the conversation for learnings and update the relevant skills. Use at the end of a session, or whenever a correction is worth keeping.",
+      "source": "./plugins/reflect",
+      "category": "productivity"
+    }
+  ]
+}

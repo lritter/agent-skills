@@ -1,0 +1,12 @@
+{
+  "name": "reflect",
+  "description": "Analyze the conversation for learnings and update the relevant skills. Use at the end of a session, or whenever a correction is worth keeping.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Lincoln Ritter",
+    "url": "https://github.com/lritter"
+  },
+  "homepage": "https://github.com/lritter/agent-skills/tree/main/plugins/reflect",
+  "repository": "https://github.com/lritter/agent-skills",
+  "keywords": ["reflection", "learning", "skills", "meta"]
+}

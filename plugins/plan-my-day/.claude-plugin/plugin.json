@@ -1,0 +1,12 @@
+{
+  "name": "plan-my-day",
+  "description": "Morning planning routine. Reads calendar, PRs, tickets, email, and Apple Reminders, checks standing priorities against the week so far, and produces one clear agenda for today.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Lincoln Ritter",
+    "url": "https://github.com/lritter"
+  },
+  "homepage": "https://github.com/lritter/agent-skills/tree/main/plugins/plan-my-day",
+  "repository": "https://github.com/lritter/agent-skills",
+  "keywords": ["planning", "calendar", "agenda", "reminders", "productivity"]
+}

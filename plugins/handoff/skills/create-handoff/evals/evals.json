@@ -1,0 +1,26 @@
+{
+  "skill_name": "create-handoff",
+  "evals": [
+    {
+      "id": 1,
+      "name": "mid-feature-implementation",
+      "prompt": "I've been working on adding a new notifications service to our FastAPI backend. Here's what happened this session:\n\n- Created `supplytrace/app/notifications/` with routes.py, service.py, storage.py, models.py\n- Implemented the SQLAlchemy models for NotificationPreference and NotificationEvent\n- Wrote the storage layer with queries for get/create/update preferences\n- Added Alembic migration for the new tables\n- Decided to use Server-Sent Events (SSE) instead of WebSockets because our Cloud Run setup doesn't support long-lived connections well\n- Hit an issue: the SSE endpoint works locally but we realized we need to configure Cloud Run's request timeout to > 60s for SSE streams\n- Haven't started: service layer business logic, route handlers, tests, frontend integration\n- The notification types we agreed on: 'risk_alert', 'data_ready', 'export_complete', 'team_invite'\n- Branch: STH-445-notifications-service\n- All existing tests still pass\n\nI'm running low on context. Can you generate a handoff prompt for a fresh session?",
+      "expected_output": "A continuation prompt that captures: the goal (notifications service), completed work (models, storage, migration), the SSE decision and why, the Cloud Run timeout blocker, remaining work items, notification types, branch name, and test status.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "debugging-partial-progress",
+      "prompt": "We've been debugging a production issue where entity search returns stale results after a merge operation. Here's what we've found so far:\n\n- The issue is in the search indexing pipeline, not the merge itself\n- Merge correctly updates the `resolved_entities` table (verified via direct SQL)\n- But the search index (Elasticsearch) doesn't get updated because the merge endpoint doesn't trigger a reindex\n- We traced the flow: merge endpoint -> MergeService.execute() -> storage.merge_entities() -> returns success, but never calls SearchService.reindex()\n- The reindex happens on a cron schedule every 15 minutes, which is why users see stale data temporarily\n- We considered three fixes: (a) trigger reindex inline after merge, (b) publish an event that triggers reindex async, (c) reduce cron interval\n- We decided on (b) because inline reindex would slow down the merge response and the cron approach is fragile\n- Haven't implemented yet - need to add a domain event publisher and a subscriber in the search service\n- Key files: supplytrace/app/entities/merge_service.py, supplytrace/app/search/service.py, supplytrace/app/search/indexer.py\n- Branch: STH-512-stale-search-after-merge\n- No tests written yet for this fix\n\nContext is getting long. Generate a handoff prompt please.",
+      "expected_output": "A continuation prompt that captures: the bug symptom, root cause diagnosis, the three options considered and why option (b) was chosen, what remains to implement, key file paths, branch name.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "refactoring-cross-cutting",
+      "prompt": "We're partway through a refactoring to move from our old pattern where route handlers contain business logic directly, to the new layered pattern (routes -> service -> storage). This session we:\n\n- Refactored `supplytrace/app/entities/routes.py` - extracted all business logic to a new `service.py`, routes now only handle HTTP concerns\n- Refactored `supplytrace/app/search/routes.py` - same pattern, created `search/service.py`\n- Updated tests for both - all passing\n- Found that `supplytrace/app/datasets/routes.py` is the most complex one remaining - it has authorization checks mixed into business logic that will need careful separation\n- Also remaining: `supplytrace/app/risk/routes.py` (straightforward), `supplytrace/app/users/routes.py` (straightforward), `supplytrace/app/exports/routes.py` (medium complexity, has background task logic)\n- We established the pattern: routes handle request/response + auth decoration, services handle business rules + orchestration, storage handles DB queries\n- Important: we're keeping the existing API contracts exactly the same - no URL or response format changes\n- Branch: STH-389-layered-refactor\n- All tests green after the two completed refactors\n\nLet's do a context handoff.",
+      "expected_output": "A continuation prompt that captures: the refactoring goal and pattern, what's completed (entities, search), what's remaining with complexity notes (datasets=complex, risk/users=straightforward, exports=medium), the established pattern definition, the constraint about API contract stability, branch name, test status.",
+      "files": []
+    }
+  ]
+}
