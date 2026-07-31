@@ -64,11 +64,30 @@ Weekly cadence targets. The skill protects whichever is furthest behind pace.
 | music | 2x/week | evening | |
 | side projects | 1 block/week | weekend or a light afternoon | |
 
+## Schedule sources
+
+Gyms or studios to pull real class times from. Feeds the anchoring rule — a
+standing priority prefers a slot that lands on a real class.
+
+`site` is the Virtuagym subdomain and `club` the `pref_club` id; both are
+visible in any schedule URL. `categories` maps a label you choose to the
+`event_type` id of each schedule tab the gym publishes.
+
+- site: <subdomain>
+  club: <pref_club id>
+  categories: <label>=<event_type>, <label>=<event_type>
+  feeds: <standing priority name>
+
+<!-- optional; leave empty and only the hand-written anchors below are used -->
+
 ## Anchored options
 
-Real scheduled things a priority can attach to — class times, a standing group
-run, a lesson slot. A block that maps to something real in the world gets done;
+Hand-entered scheduled things a priority can attach to — a standing group run,
+a lesson slot. A block that maps to something real in the world gets done;
 a floating "45m exercise" doesn't.
+
+For gym classes, prefer **Schedule sources** above — those are fetched fresh, so
+they don't go stale the way a hand-written list does.
 
 Format: `Day HH:MM–HH:MM · Name`
 

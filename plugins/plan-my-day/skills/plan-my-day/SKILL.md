@@ -80,6 +80,7 @@ Then fan out. These are independent — issue them in a single block so they run
 | Tickets | `notion-query-data-sources` against the source in config — see below |
 | Email | `search_threads`, query below, `pageSize` 15 |
 | Reminders | `reminders show "<list>" --format json` per list in config |
+| Gym classes | `gym-schedule`'s `scripts/virtuagym_schedule.py`, `--date` today, once per **Schedule sources** entry in config. Skip entirely if that section is empty. |
 
 Both `gh search` forms are repo-independent — they work from any directory, no repo context needed.
 
@@ -126,6 +127,7 @@ If a source fails — expired MCP auth, calendar not connected, `gh` not logged 
 
 ```
 Notion: NOT CHECKED — MCP auth expired, re-auth with /mcp
+Gym schedule: NOT CHECKED — virtuagym_schedule.py exited 1
 ```
 
 Never silently omit a source. An agenda quietly missing a 10am is worse than no agenda at all. MCP auth expires periodically; expect it.
@@ -146,7 +148,7 @@ One message. Batch everything into it, using `AskUserQuestion` where the answers
 2. **They are the blocker** — someone else's work is stalled on them. Review-requested PRs, email awaiting a reply, tickets in review. This outranks their own solo work, always.
 3. **Behind-pace standing priorities** — a priority under its weekly cadence gets a real block today, not a hope. Protect it like a meeting.
 
-   If config lists **anchored options** for a priority — real class times, a standing group run, a lesson slot — prefer a slot that lands on one over an unanchored block. A block that maps to something scheduled in the world gets done; a floating "45m exercise" doesn't. If that section is an unfilled TODO, slot into any qualifying gap and mention once, at most, that filling it in would help.
+   If config lists **anchored options** for a priority — a standing group run, a lesson slot — or a **schedule source** returned classes for today, prefer a slot that lands on one over an unanchored block. A block that maps to something scheduled in the world gets done; a floating "45m exercise" doesn't. If both sections are empty, slot into any qualifying gap and mention once, at most, that filling one in would help.
 4. **Their own work in flight** — open PRs, tickets in progress.
 5. **Backlog** — undated reminders, on-pace priorities, anything else, only if room remains.
 
