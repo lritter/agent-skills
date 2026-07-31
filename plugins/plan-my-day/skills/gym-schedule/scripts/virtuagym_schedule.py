@@ -229,7 +229,7 @@ class ScheduleError(Exception):
 
 
 def resolve_host(site: str) -> str:
-    """'dodge-ymca' -> 'dodge-ymca.virtuagym.com'. A full hostname passes through."""
+    """'example-gym' -> 'example-gym.virtuagym.com'. A full hostname passes through."""
     return site if "." in site else site + ".virtuagym.com"
 
 
@@ -365,8 +365,8 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--site", required=True,
-                        help="Virtuagym subdomain (e.g. dodge-ymca) or full hostname")
-    parser.add_argument("--club", required=True, help="pref_club id (e.g. 42450)")
+                        help="Virtuagym subdomain (e.g. example-gym) or full hostname")
+    parser.add_argument("--club", required=True, help="pref_club id from the schedule URL")
     parser.add_argument("--category", action="append", required=True,
                         metavar="LABEL=EVENT_TYPE",
                         help="repeatable, e.g. --category pool=1204 --category group=1203")

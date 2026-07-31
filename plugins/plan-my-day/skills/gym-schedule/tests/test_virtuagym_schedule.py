@@ -263,7 +263,7 @@ class TestCollect(unittest.TestCase):
     def test_one_fetch_per_category_for_dates_inside_one_week(self):
         fetch = _StubFetcher()
         sessions, counts = collect(
-            "example-gym.virtuagym.com", "42450",
+            "example-gym.virtuagym.com", "00000",
             [("pool", "1204"), ("group", "1203")],
             ["2026-07-27", "2026-07-31", "2026-08-02"],
             fetch,
@@ -296,7 +296,7 @@ class TestCollect(unittest.TestCase):
     def test_a_category_returning_nothing_reports_zero_rather_than_failing(self):
         fetch = _StubFetcher()
         _, counts = collect(
-            "example-gym.virtuagym.com", "42450",
+            "example-gym.virtuagym.com", "00000",
             [("pool", "1204"), ("bogus", "9999")],
             ["2026-07-27"], fetch,
         )
