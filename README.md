@@ -15,6 +15,7 @@ Install only what you want — each plugin is independent.
 
 | Plugin | What it does |
 | --- | --- |
+| `advise` | A user-triggered stand-in for the built-in `advisor`, with a model you choose. Run `/advise [focus]`: a reviewer subagent (default `fable`) reads this session's full transcript and advises on your approach before you commit. |
 | `handoff` | Write a handoff document capturing session state, then apply it — return the contents, dispatch a subagent, or start a fresh session. Two skills that pair: `create-handoff` writes, `perform-handoff` executes. |
 | `plan-my-day` | Morning planning routine. Reads calendar, PRs, tickets, email, and Apple Reminders, checks standing priorities against the week so far, and produces one clear agenda for today. Ships a second skill, `gym-schedule`, for looking up class times at a Virtuagym-hosted gym. |
 | `reflect` | Analyze the conversation for learnings and update the relevant skills. |
@@ -25,10 +26,14 @@ Install only what you want — each plugin is independent.
 .claude-plugin/marketplace.json    the marketplace manifest
 plugins/<name>/
 ├── .claude-plugin/plugin.json     the plugin manifest
-└── skills/<skill-name>/SKILL.md   one directory per skill
+├── skills/<skill-name>/SKILL.md   one directory per skill
+├── commands/<name>.md             slash commands (optional)
+└── agents/<name>.md               subagent definitions (optional)
 ```
 
-A plugin can hold more than one skill — `handoff` holds two.
+A plugin can hold more than one skill — `handoff` holds two. It can also ship
+slash commands and subagents instead of (or alongside) skills — `advise` pairs a
+`/advise` command with a `fable-advisor` subagent.
 
 ## Configuration and personal data
 

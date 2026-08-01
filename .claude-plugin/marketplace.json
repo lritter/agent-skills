@@ -8,6 +8,12 @@
   },
   "plugins": [
     {
+      "name": "advise",
+      "description": "Consult a reviewer model that reads this session's full transcript and advises before you commit to an approach. A user-triggered stand-in for the built-in advisor, with a model you choose (defaults to fable). Invoke with /advise.",
+      "source": "./plugins/advise",
+      "category": "productivity"
+    },
+    {
       "name": "handoff",
       "description": "Write a handoff document capturing session state, then apply it — return the contents, dispatch a subagent, or start a fresh session. Two skills that pair: create-handoff writes, perform-handoff executes.",
       "source": "./plugins/handoff",
