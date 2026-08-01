@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "advise",
-      "description": "Consult a reviewer model that reads this session's full transcript and advises before you commit to an approach. A user-triggered stand-in for the built-in advisor, with a model you choose (defaults to fable). Invoke with /advise.",
+      "description": "Consult a reviewer model that reads this session's full transcript and advises before you commit to an approach. A user-triggered stand-in for the built-in advisor, with a model you choose (defaults to fable). Invoke with /advise:advise.",
       "source": "./plugins/advise",
       "category": "productivity"
     },

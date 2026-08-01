@@ -1,6 +1,6 @@
 ---
 description: Consult a fable reviewer that reads this session's full transcript and advises on your approach
-argument-hint: [optional focus, e.g. "the migration approach"]
+argument-hint: "[optional focus, e.g. the migration approach]"
 allowed-tools: Bash(find:*)
 disable-model-invocation: true
 ---
@@ -13,8 +13,10 @@ If the line above is blank (session id unset or transcript not yet written),
 stop and tell the user you couldn't locate the transcript — do not dispatch a
 reviewer at an empty path.
 
-Dispatch the `fable-advisor` subagent (Agent tool, `subagent_type: "fable-advisor"`)
-to read that transcript file and advise on the current approach. In the prompt you
+Dispatch the fable-advisor subagent to read that transcript file and advise on the
+current approach. Use `subagent_type: "advise:fable-advisor"` (this plugin ships the
+agent namespaced under the plugin name); if your harness reports that type isn't
+found, fall back to the bare `subagent_type: "fable-advisor"`. In the prompt you
 give it, include:
 
 - The absolute transcript path printed above.
