@@ -30,6 +30,12 @@
       "description": "Analyze the conversation for learnings and update the relevant skills. Use at the end of a session, or whenever a correction is worth keeping.",
       "source": "./plugins/reflect",
       "category": "productivity"
+    },
+    {
+      "name": "claude-session-files",
+      "description": "Record the files Claude writes or edits, per session, into /tmp so a tmux popup picker can preview them newest-first. Pairs with ~/.config/tmux/claude-file-picker.sh.",
+      "source": "./plugins/claude-session-files",
+      "category": "productivity"
     }
   ]
 }

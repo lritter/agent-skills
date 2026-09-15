@@ -1,0 +1,12 @@
+{
+  "name": "claude-session-files",
+  "description": "Record the files Claude writes or edits, per session, into /tmp so a tmux popup picker can preview them newest-first. Pairs with ~/.config/tmux/claude-file-picker.sh.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Lincoln Ritter",
+    "url": "https://github.com/lritter"
+  },
+  "homepage": "https://github.com/lritter/agent-skills/tree/main/plugins/claude-session-files",
+  "repository": "https://github.com/lritter/agent-skills",
+  "keywords": ["hooks", "tmux", "files", "session", "picker"]
+}
