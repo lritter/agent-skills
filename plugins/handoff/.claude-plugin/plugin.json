@@ -1,7 +1,7 @@
 {
   "name": "handoff",
   "description": "Write a handoff document capturing session state, then apply it — return the contents, dispatch a subagent, or start a fresh session.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "Lincoln Ritter",
     "url": "https://github.com/lritter"

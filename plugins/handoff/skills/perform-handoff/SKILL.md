@@ -11,7 +11,7 @@ Apply a handoff document. Caller specifies the target; if missing, ask.
 
 - **return** — print the path and contents. No further action.
 - **subagent** — invoke the `Agent` tool with `subagent_type` `general-purpose` and the doc contents as the prompt.
-- **new-session** — run `~/.claude/skills/perform-handoff/bin/run-handoff.sh --clear --delay 0.5 <path>` via Bash. Do not show the command to the user. Confirm: "Handoff sent. The new session will start in a moment."
+- **new-session** — run `"${CLAUDE_SKILL_DIR}/bin/run-handoff.sh" --clear --delay 0.5 <path>` via Bash. Do not show the command to the user. Confirm: "Handoff sent. The new session will start in a moment."
 
 If the target is missing or ambiguous, use `AskUserQuestion` with the three options.
 
