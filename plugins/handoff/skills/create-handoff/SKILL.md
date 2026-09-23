@@ -7,7 +7,7 @@ description: Use when only a handoff document is needed — for later use, archi
 
 Write a handoff document summarizing the current conversation so another agent can continue the work.
 
-Save it to `/tmp/handoff-TIMESTAMP-RANDOM.md` where TIMESTAMP is current epoch seconds (`date +%s`) and RANDOM is 4 hex chars (`openssl rand -hex 2`). The path is unique by construction — write directly with the Write tool.
+Save it to `~/.claude/handoff-prompts/handoff-TIMESTAMP-RANDOM.md` (expand `~` to an absolute path) where TIMESTAMP is current epoch seconds (`date +%s`) and RANDOM is 4 hex chars (`openssl rand -hex 2`). The path is unique by construction — write directly with the Write tool. Handoff docs are kept for recovery and pruned after 7 days (`HANDOFF_RETAIN_DAYS`) by `run-handoff.sh`.
 
 Do not duplicate content already captured elsewhere (plan files under `.local/ai/plans/`, PRDs, tickets, design docs). Reference them by path or URL.
 
