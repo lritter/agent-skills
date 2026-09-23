@@ -28,7 +28,8 @@ plugins/<name>/
 ├── .claude-plugin/plugin.json     the plugin manifest
 ├── skills/<skill-name>/SKILL.md   one directory per skill
 ├── commands/<name>.md             slash commands (optional)
-└── agents/<name>.md               subagent definitions (optional)
+├── agents/<name>.md               subagent definitions (optional)
+└── hooks/hooks.json               Claude Code hooks (optional)
 ```
 
 A plugin can hold more than one skill — `handoff` holds two. It can also ship
