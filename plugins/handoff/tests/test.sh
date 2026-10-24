@@ -20,6 +20,8 @@ mkdir -p "$TMP/fakebin"
 cat >"$TMP/fakebin/tmux" <<'FAKE'
 #!/bin/sh
 echo "$*" >>"$TMUX_LOG"
+[ "$1" = display-message ] && echo fake-session
+exit 0
 FAKE
 chmod +x "$TMP/fakebin/tmux"
 export PATH="$TMP/fakebin:$PATH" TMUX_LOG="$TMP/tmux.log"
@@ -136,6 +138,57 @@ echo old >"$old"
 touch -t 202001010000 "$old" "$DOC"
 PANE=%7 queue "$DOC" >/dev/null
 [[ ! -e "$old" && -e "$DOC" ]] && pass "prunes old docs, keeps current" || fail "prune"
+
+# --- workmux target ------------------------------------------------------
+WMH="$ROOT/skills/perform-handoff/bin/workmux-handoff.sh"
+export WORKMUX_LOG="$TMP/workmux.log"
+cat >"$TMP/fakebin/workmux" <<'FAKE'
+#!/bin/bash
+# Record argv one per line, and the -P prompt file's contents (the script
+# deletes it on exit).
+if [ "$1" = path ]; then echo "/wt/$2-handle"; exit 0; fi
+printf '%s\n' "$@" >"$WORKMUX_LOG"
+while [ $# -gt 0 ]; do
+  [ "$1" = -P ] && cp "$2" "$WORKMUX_LOG.prompt"
+  shift
+done
+FAKE
+chmod +x "$TMP/fakebin/workmux"
+git -C "$TMP/repo" -c user.name=t -c user.email=t@t commit -q --allow-empty -m init
+git init -q --bare "$TMP/origin.git"
+git -C "$TMP/repo" push -q "$TMP/origin.git" HEAD:main
+
+# wmh [args...] -> workmux-handoff.sh from a repo subdir; PANE sets TMUX_PANE
+wmh() { (cd "$TMP/repo/sub" && TMUX_PANE="${PANE-}" "$WMH" "$@"); }
+
+rm -f "$WORKMUX_LOG"
+out=$(wmh "$DOC" 2>&1); rc=$?
+[[ $rc -ne 0 && ! -e "$WORKMUX_LOG" ]] && pass "workmux: requires --branch" || fail "requires --branch" "rc=$rc"
+
+out=$(PANE= wmh --branch feat-x "$DOC" 2>/dev/null); rc=$?
+args=$(cat "$WORKMUX_LOG" 2>/dev/null)
+[[ $rc -eq 0 && "$args" == $'add\nfeat-x\n-b\n-P\n'* && "$args" != *--base* && "$args" != *--parent-session* ]] &&
+  pass "workmux: no origin, no tmux: plain background add" || fail "plain add" "rc=$rc args=$args"
+[[ "$out" == *"handle feat-x-handle"* ]] && pass "workmux: prints the handle" || fail "prints handle" "$out"
+prompt=$(cat "$WORKMUX_LOG.prompt")
+[[ "$prompt" == *"saved at $DOC"* && "$prompt" == *"# handoff"* && "$prompt" == *"Continue the work"* ]] &&
+  pass "workmux: prompt is the doc, with its path" || fail "prompt" "$prompt"
+[[ -z "$(ls "${TMPDIR:-/tmp}"/workmux-handoff.* 2>/dev/null)" ]] && pass "workmux: temp prompt removed" || fail "temp prompt left behind"
+
+git -C "$TMP/repo" remote add origin "$TMP/origin.git"
+git -C "$TMP/repo" fetch -q origin
+: >"$TMUX_LOG"
+PANE=%7 wmh --branch STH-1-x --after "/st implement STH-1" "$DOC" >/dev/null 2>&1
+args=$(cat "$WORKMUX_LOG")
+[[ "$args" == *$'--base\norigin/main'* && "$args" == *$'--parent-session\nfake-session'* ]] &&
+  pass "workmux: origin base and caller's session" || fail "base/session" "$args"
+grep -q -- "display-message -p -t %7" "$TMUX_LOG" && pass "workmux: session read from the caller's pane" || fail "session lookup" "$(cat "$TMUX_LOG")"
+grep -q 'run `/st implement STH-1`' "$WORKMUX_LOG.prompt" && pass "workmux: --after lands in the prompt" || fail "--after" "$(cat "$WORKMUX_LOG.prompt")"
+
+rm -f "$WORKMUX_LOG"
+out=$(PANE= wmh --dry-run --branch feat-y --base origin/dev "$DOC")
+[[ ! -e "$WORKMUX_LOG" && "$out" == *"--base origin/dev"* && "$out" != *"git fetch"* ]] &&
+  pass "workmux: dry-run, explicit base skips fetch" || fail "dry-run" "$out"
 
 echo
 [[ $fails -eq 0 ]] && echo "all passed" || { echo "$fails failed"; exit 1; }

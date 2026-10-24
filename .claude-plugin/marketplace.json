@@ -15,7 +15,7 @@
     },
     {
       "name": "handoff",
-      "description": "Write a handoff document capturing session state, then apply it — return the contents, dispatch a subagent, or start a fresh session. Two skills that pair: create-handoff writes, perform-handoff executes.",
+      "description": "Write a handoff document capturing session state, then apply it — return the contents, dispatch a subagent, start a fresh session, or start an agent in a new workmux worktree. create-handoff writes, perform-handoff executes, and work-on does both for a workmux worktree.",
       "source": "./plugins/handoff",
       "category": "productivity"
     },
