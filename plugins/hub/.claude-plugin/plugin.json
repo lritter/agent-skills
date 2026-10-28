@@ -1,0 +1,12 @@
+{
+  "name": "hub",
+  "description": "Run a coordination hub over parallel workmux agent sessions: a stack of active projects, one state file per session, and a generated view of what's waiting on you, in order. Dispatch, relay and clean up sessions without ever merging.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Lincoln Ritter",
+    "url": "https://github.com/lritter"
+  },
+  "homepage": "https://github.com/lritter/agent-skills/tree/main/plugins/hub",
+  "repository": "https://github.com/lritter/agent-skills",
+  "keywords": ["hub", "coordinator", "workmux", "sessions", "handoff"]
+}
