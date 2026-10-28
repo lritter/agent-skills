@@ -20,6 +20,12 @@
       "category": "productivity"
     },
     {
+      "name": "hub",
+      "description": "Run a coordination hub over parallel workmux agent sessions: a stack of active projects, one state file per session, and a generated view of what's waiting on you, in order. Dispatch, relay and clean up sessions; merges stay on GitHub.",
+      "source": "./plugins/hub",
+      "category": "productivity"
+    },
+    {
       "name": "plan-my-day",
       "description": "Morning planning routine. Reads calendar, PRs, tickets, email, and Apple Reminders, checks standing priorities against the week so far, and produces one clear agenda for today. Includes gym-schedule for looking up class times at a Virtuagym-hosted gym.",
       "source": "./plugins/plan-my-day",

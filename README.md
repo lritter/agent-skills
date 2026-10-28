@@ -17,6 +17,7 @@ Install only what you want — each plugin is independent.
 | --- | --- |
 | `advise` | A user-triggered stand-in for the built-in `advisor`, with a model you choose. Run `/advise:advise [focus]`: a reviewer subagent (default `fable`) reads this session's full transcript and advises on your approach before you commit. |
 | `handoff` | Write a handoff document capturing session state, then apply it — return the contents, dispatch a subagent, or start a fresh session. Two skills that pair: `create-handoff` writes, `perform-handoff` executes. |
+| `hub` | Coordinate parallel [workmux](https://github.com/raine/workmux) agent sessions from one hub session: a stack of active projects, one state file per session that the worker keeps current, and a generated "waiting on you" queue. `/hub dispatch` starts a session through `handoff`'s workmux target with a reporting contract appended; `/hub relay` messages another session; `/hub clean` removes only sessions with nothing left after merge. It never merges. |
 | `plan-my-day` | Morning planning routine. Reads calendar, PRs, tickets, email, and Apple Reminders, checks standing priorities against the week so far, and produces one clear agenda for today. Ships a second skill, `gym-schedule`, for looking up class times at a Virtuagym-hosted gym. |
 | `reflect` | Analyze the conversation for learnings and update the relevant skills. |
 
@@ -52,6 +53,10 @@ and the skill reads it at runtime.
 `gym-schedule` needs no setup to use directly — pass `--site` and `--club` on the
 command line. Adding a **Schedule sources** block to `config.md` is what lets
 `plan-my-day` anchor exercise blocks to real class times.
+
+`hub` keeps its state per repository in `.local/ai/hub/` (gitignored local storage) and
+needs `workmux`, `gh`, and the `handoff` plugin. Run `/hub` once in the session you want as
+the hub; it offers to create the directory.
 
 If you add a skill here, keep that boundary: ids, emails, calendar addresses, and
 family details go in config, not in the SKILL.md.
