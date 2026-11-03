@@ -1,0 +1,12 @@
+{
+  "name": "standup",
+  "description": "Daily standup writer. Reads calendar, GitHub, the issue tracker, public Slack, and optionally a work-log channel and the hub, drafts a Did/Doing list since the last standup, asks one round of questions, and prints the final list ready to paste into Slack.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Lincoln Ritter",
+    "url": "https://github.com/lritter"
+  },
+  "homepage": "https://github.com/lritter/agent-skills/tree/main/plugins/standup",
+  "repository": "https://github.com/lritter/agent-skills",
+  "keywords": ["standup", "status", "calendar", "github", "slack", "notion", "productivity"]
+}

@@ -32,6 +32,12 @@
       "category": "productivity"
     },
     {
+      "name": "standup",
+      "description": "Daily standup writer. Reads calendar, GitHub, the issue tracker, public Slack, and optionally a work-log channel and the hub, drafts a Did/Doing list since the last standup, asks one round of questions, and prints the final list ready to paste into Slack.",
+      "source": "./plugins/standup",
+      "category": "productivity"
+    },
+    {
       "name": "reflect",
       "description": "Analyze the conversation for learnings and update the relevant skills. Use at the end of a session, or whenever a correction is worth keeping.",
       "source": "./plugins/reflect",
