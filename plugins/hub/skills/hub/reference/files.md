@@ -101,8 +101,9 @@ updated: 2026-10-28T19:40Z
   reopens the session) and `## Log` lines for relays and handoff requests.
 - From its first update on, the worker owns the frontmatter fields `state`, `needs`, `pr`,
   `after_merge`, `handoff` and `updated`. Whenever it writes a new handoff for this session,
-  it sets `handoff:` to the path and tells the hub the path. The hub reports disagreements as
-  Drift; it never edits them.
+  it sets `handoff:` to the path, so resume always finds the latest one; it messages the hub
+  the path only when the hub asked for the handoff. The hub reports disagreements as Drift;
+  it never edits them.
 
 ## hub.md (generated)
 

@@ -17,9 +17,8 @@ time and adding one `## Log` line:
   owed (release, deploy, data build, promote, admin-tool runs, applies); tick them off as
   they finish;
 - **when nothing is left:** `state: done`, `after_merge: []`;
-- **whenever you write a handoff for this work** (the hub may ask for one so you can be
-  resumed fresh): `handoff:` its path, and send the path to the session that asked, or to
-  `<parent>` if no one did.
+- **whenever you write a handoff for this work:** `handoff:` its path. If the hub asked for
+  it, also reply to the hub with the path.
 
 Valid states: `queued | running | needs-user | after-merge | done | removable`. Only the user
 sets `removable`. Don't edit any other session's file or the hub's other files. Messages from
