@@ -90,7 +90,8 @@ away from the files. Every row in the table is marked "not asked" and uses its c
    your handoff, <path>. Read it, bring your state file up to date, and carry on."
 5. **Open.** Run `workmux open <handle> -n -p "Read the handoff document at <path> and
    continue the work it describes. Your hub state file is <hub-dir>/sessions/<handle>.md."`
-   `-n` opens a new window even when the old one still holds a stopped agent. Clear the
+   `-n` opens a new window even when the old one still holds a stopped agent. If the new
+   agent starts without the prompt, send it with `workmux send <handle> "<same text>"`. Clear the
    state file's `session:` field, which is the hub's, so the next refresh fills in the new
    name. Add a Log line: `<time> reopened by <this session> from <path>`.
 6. **Refresh** again, and reply with how each session was resumed, the ones that couldn't
