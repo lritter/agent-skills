@@ -21,7 +21,7 @@
     },
     {
       "name": "hub",
-      "description": "Run a coordination hub over parallel workmux agent sessions: a stack of active projects, one state file per session, and a generated view of what's waiting on you, in order. Dispatch, relay and clean up sessions; merges stay on GitHub.",
+      "description": "Run a coordination hub over parallel workmux agent sessions: a stack of active projects, one state file per session, and a generated view of what's waiting on you, in order. Dispatch, relay, hand off, resume and clean up sessions; merges stay on GitHub.",
       "source": "./plugins/hub",
       "category": "productivity"
     },

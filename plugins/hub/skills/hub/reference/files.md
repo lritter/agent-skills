@@ -37,6 +37,7 @@ Risk: <the one thing most likely to bite, or blank>
 - <YYYY-MM-DD> move <Project> <from> → <to>
 - <YYYY-MM-DD> pop <Project> (<why, if given>)
 - <YYYY-MM-DD> claim <session name> (replaced <old name>)
+- <YYYY-MM-DD> handoff <absolute path to the hub handoff>
 ```
 
 Position = the `## <n>.` number; renumber on every push/pop/move. Next/Blocked/Risk are the
@@ -72,7 +73,7 @@ state: needs-user                        # see States
 needs: sign off on the plan              # one line: the decision, when state is needs-user
 pr:                                      # PR URL once opened
 after_merge: []                          # every step still owed after the PR merges
-handoff: ~/.claude/handoff-prompts/handoff-....md
+handoff: ~/.claude/handoff-prompts/handoff-....md   # the session's latest handoff
 updated: 2026-10-28T19:40Z
 ---
 
@@ -96,9 +97,12 @@ updated: 2026-10-28T19:40Z
 ### Two writers
 
 - The hub writes the file once at dispatch (`state: queued`, `parent`, `serves`, `kind`,
-  `handoff`), fills `session` on refresh, and appends `## Log` lines for relays.
+  `handoff`). After that it writes only `session` (filled on refresh, cleared when resume
+  reopens the session) and `## Log` lines for relays and handoff requests.
 - From its first update on, the worker owns the frontmatter fields `state`, `needs`, `pr`,
-  `after_merge` and `updated`. The hub reports disagreements as Drift; it never edits them.
+  `after_merge`, `handoff` and `updated`. Whenever it writes a new handoff for this session,
+  it sets `handoff:` to the path and tells the hub the path. The hub reports disagreements as
+  Drift; it never edits them.
 
 ## hub.md (generated)
 
