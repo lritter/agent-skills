@@ -20,6 +20,7 @@ Install only what you want — each plugin is independent.
 | `hub` | Coordinate parallel [workmux](https://github.com/raine/workmux) agent sessions from one hub session: a stack of active projects, one state file per session that the worker keeps current, and a generated "waiting on you" queue. `/hub dispatch` starts a session through `handoff`'s workmux target with a reporting contract appended; `/hub relay` messages another session; `/hub clean` removes only sessions with nothing left after merge; `/hub handoff` has every session with pending work write a handoff and writes the hub's own with a resume table, and `/hub resume` restarts them from it. It never merges. |
 | `plan-my-day` | Morning planning routine. Reads calendar, PRs, tickets, email, and Apple Reminders, checks standing priorities against the week so far, and produces one clear agenda for today. Ships a second skill, `gym-schedule`, for looking up class times at a Virtuagym-hosted gym. |
 | `reflect` | Analyze the conversation for learnings and update the relevant skills. |
+| `standup` | Daily standup writer. `/standup [today's plans]` reads calendar, GitHub, the issue tracker, public Slack, and optionally a work-log channel and the hub, drafts a Did/Doing list since the last standup, asks one round of questions, and prints the final list in a code block ready to paste into Slack. Private meetings, 1:1s, DMs and private channels stay out. |
 
 ## Layout
 
@@ -53,6 +54,12 @@ and the skill reads it at runtime.
 `gym-schedule` needs no setup to use directly — pass `--site` and `--club` on the
 command line. Adding a **Schedule sources** block to `config.md` is what lets
 `plan-my-day` anchor exercise blocks to real class times.
+
+`standup` reads `~/.local/ai/standup/config.md`: copy
+`plugins/standup/skills/standup/reference/config.template.md` there and fill in the
+calendar ids, the tracker's data source and your assignee id, and any Slack channels to
+include or exclude. It keeps a one-line-per-run log beside it, so "Did" covers the time
+since your last standup. It also needs `gh`, logged in.
 
 `hub` keeps its state per repository in `.local/ai/hub/` (gitignored local storage) and
 needs `workmux`, `gh`, and the `handoff` plugin. Run `/hub` once in the session you want as
