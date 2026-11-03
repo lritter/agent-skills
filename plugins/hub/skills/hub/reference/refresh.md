@@ -6,7 +6,9 @@ On refresh, find this session's ListAgents name (ListAgents prints "This session
 If `stack.md`'s `hub_session` differs:
 - the old name is still listed by ListAgents → say so in one line ("<old> was the hub; this
   session takes over") and continue;
-- either way, write the new `hub_session` and `claimed`, and append a `claim` history line.
+- either way, write the new `hub_session` and `claimed`, and append a `claim` history line;
+- if the History has a `handoff` line, mention the latest one in the reply ("Latest hub
+  handoff: <path> (<date>). `/hub resume` resumes its sessions."). Don't resume on your own.
 
 If ListAgents isn't available, leave the claim as it is and say so.
 
