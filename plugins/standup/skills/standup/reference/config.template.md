@@ -26,15 +26,29 @@ Calendar **IDs**, not display names. Get them from `list_calendars` once during
 setup. List only calendars that hold work meetings. A family or personal
 calendar here puts school pickups in your standup.
 
-- `you@work.example.com`: work
+One line per calendar: `<id>`: `<type>`, a label. The type is `google` (the
+default) or `feed`.
 
-Meetings are kept only if they're public. These rules always apply: drop events
-marked `private`, focus time, out-of-office, working-location, all-day events,
-events marked free (transparent), events you declined or never answered,
-and events with fewer than two other attendees (1:1s and solo holds).
+- `you@work.example.com`: google, work
+
+**`google`** is a calendar you own or that's shared to you. Meetings are kept only
+if they're public: drop events marked `private`, focus time, out-of-office,
+working-location, all-day events, events marked free (transparent), events you
+declined or never answered, and events with fewer than two other attendees (1:1s
+and solo holds).
+
+**`feed`** is an ICS feed imported into Google. An Outlook calendar published by URL
+shows up as `<random>@import.calendar.google.com`; copy the id from the embed link's
+`src=` (decode `%40` to `@`). A feed has no attendees or response status, so the
+skill can't tell a 1:1 or a declined meeting by itself. It keeps timed, busy events
+whose titles aren't privacy placeholders (`Busy`, `Private appointment`, ...) or
+matches for the patterns below. In Outlook, publish the calendar with **Can view
+all details** or every title arrives as `Busy`.
 
 - `exclude_titles`: titles (case-insensitive substrings) to drop even when the
   rules above would keep them. For example `lunch`, `hold`, `interview`.
+- `one_on_one_patterns`: title substrings that mark a 1:1 on a feed calendar,
+  where attendee counts aren't available. For example `1:1`, `<>`, `1-on-1`.
 
 ## GitHub
 
