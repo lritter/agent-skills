@@ -190,6 +190,32 @@ EOF
 
 # Per-case state.
 case "$CASE" in
+  feed-calendar)
+    # The work calendar is an Outlook ICS feed imported into Google: no attendees,
+    # no response status, and every event reads public.
+    perl -pi -e 's/^- `work\@example\.com`: work$/- `abc123feed\@import.calendar.google.com`: feed, work\n- `one_on_one_patterns`: 1:1, <>/' home/.local/ai/standup/config.md
+    perl -pi -e 's/Google Calendar `list_events` \(any range, calendar work\@example.com\)/Google Calendar `list_events` (any range, calendar abc123feed\@import.calendar.google.com)/' fixtures/README.md
+    cat > fixtures/calendar.json <<'EOF'
+{"summary": "Calendar", "accessRole": "reader", "timeZone": "UTC", "events": [
+ {"summary": "ST: All Hands Meeting", "start": {"dateTime": "2026-10-30T10:00:00-04:00"}, "end": {"dateTime": "2026-10-30T10:45:00-04:00"}, "eventType": "DEFAULT", "visibility": "public", "location": "Microsoft Teams Meeting",
+  "organizer": {"email": "abc123feed@import.calendar.google.com", "self": true}},
+ {"summary": "Lincoln <> Moin", "start": {"dateTime": "2026-10-30T11:00:00-04:00"}, "end": {"dateTime": "2026-10-30T11:30:00-04:00"}, "eventType": "DEFAULT", "visibility": "public",
+  "organizer": {"email": "abc123feed@import.calendar.google.com", "self": true}},
+ {"summary": "Busy", "start": {"dateTime": "2026-10-30T13:00:00-04:00"}, "end": {"dateTime": "2026-10-30T14:00:00-04:00"}, "eventType": "DEFAULT", "visibility": "public",
+  "organizer": {"email": "abc123feed@import.calendar.google.com", "self": true}},
+ {"summary": "Private appointment", "start": {"dateTime": "2026-10-30T14:00:00-04:00"}, "end": {"dateTime": "2026-10-30T15:00:00-04:00"}, "eventType": "DEFAULT", "visibility": "public",
+  "organizer": {"email": "abc123feed@import.calendar.google.com", "self": true}},
+ {"summary": "Conference week", "start": {"date": "2026-10-30"}, "end": {"date": "2026-10-31"}, "eventType": "DEFAULT", "visibility": "public",
+  "organizer": {"email": "abc123feed@import.calendar.google.com", "self": true}},
+ {"summary": "Customer call: Northwind", "start": {"dateTime": "2026-10-30T16:00:00-04:00"}, "end": {"dateTime": "2026-10-30T16:30:00-04:00"}, "eventType": "DEFAULT", "visibility": "public", "location": "Microsoft Teams Meeting",
+  "organizer": {"email": "abc123feed@import.calendar.google.com", "self": true}},
+ {"summary": "Leadership Meeting", "start": {"dateTime": "2026-11-02T14:00:00-05:00"}, "end": {"dateTime": "2026-11-02T15:00:00-05:00"}, "eventType": "DEFAULT", "visibility": "public",
+  "organizer": {"email": "abc123feed@import.calendar.google.com", "self": true}},
+ {"summary": "1:1 Sam / Lincoln", "start": {"dateTime": "2026-11-02T15:00:00-05:00"}, "end": {"dateTime": "2026-11-02T15:30:00-05:00"}, "eventType": "DEFAULT", "visibility": "public",
+  "organizer": {"email": "abc123feed@import.calendar.google.com", "self": true}}
+]}
+EOF
+    ;;
   since-last-run)
     printf '# standup run log\n\n| 2026-10-30T09:35-04:00 | emitted |\n| 2026-11-02T09:40-05:00 | emitted |\n' > home/.local/ai/standup/log.md
     cat > fixtures/slack-public.json <<'EOF'

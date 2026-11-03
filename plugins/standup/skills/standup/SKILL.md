@@ -152,7 +152,9 @@ see; keep the log's wording and drop any duplicate of a calendar bullet.
 
 ### Calendar: what counts as public
 
-Keep an event only if **all** hold:
+Each configured calendar has a type, `google` (the default) or `feed`.
+
+For a **`google`** calendar, keep an event only if **all** hold:
 - `visibility` isn't `private` or `confidential`;
 - `eventType` is `DEFAULT` (not focus time, out-of-office, working location);
 - it has a start time (not all-day) and isn't marked free (`transparency: transparent`);
@@ -160,6 +162,23 @@ Keep an event only if **all** hold:
   or accepted). `needsAction`, `tentative` and `declined` are out;
 - it has **at least two other attendees** (1:1s and solo holds are out);
 - its title doesn't match `exclude_titles`.
+
+A **`feed`** calendar is an ICS feed imported into Google, such as an Outlook calendar
+published by URL. Its events carry no attendees and no response status, the import
+itself shows as organizer, and every event reads `visibility: public` whatever it was
+at the source. Two of the rules above would drop everything, and the visibility rule
+proves nothing. For a feed, keep an event only if:
+- it has a start time (not all-day) and isn't marked free;
+- its title isn't a privacy placeholder: `Busy`, `Private`, `Private appointment`,
+  `Tentative`, `Free`, `Away`, `Out of office` (exact match, case-insensitive). The
+  source sends one of those for an event marked private;
+- its title doesn't match `exclude_titles` or `one_on_one_patterns` (case-insensitive
+  substrings). Those patterns stand in for the attendee count a feed can't give.
+
+A feed lags its source by a few hours (Google refreshes imports on its own schedule),
+so a meeting booked this morning may be missing from "Doing". Add the line
+`Calendar: feed, attendance not verified` under the draft whenever a feed calendar
+contributed a bullet, so the reader knows a declined meeting could have slipped in.
 
 Use the event's own title. Don't add attendees, descriptions, or meeting notes. A
 title can carry details that only make sense in a calendar; trim it to what the
